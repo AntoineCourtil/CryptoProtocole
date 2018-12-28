@@ -29,6 +29,7 @@ played_by A def=
     01.  State=0 /\ RCV(start) =|>
             State':=1 /\
             Na':=new() /\
+            secret(Na', na, {A,TS}) /\ 
             PKaBIS' := PKa /\
             SND({Na'.{PKaBIS'}_inv(PKa)}_KAts)
    
@@ -36,7 +37,15 @@ played_by A def=
     05.  State=1 /\ RCV({Na.Nb'.{PKbBIS'}_inv(PKb)}_KAts) =|> 
             State':=2 /\
             equal(PKb, PKbBIS') /\
-            SND({Nb'}_PKb)
+            CleSession':=new() /\
+            secret(CleSession', cleSession, {A,B}) /\ 
+            witness(A, B, a_b_CleSession, CleSession') /\
+            Na':=new() /\
+            secret(Na', na, {A,TS}) /\ 
+            SND({Na'.Nb'.CleSession'}_PKb)
+
+    07.  State=2 /\ RCV({Na}_CleSession) =|>
+            State':=3
 
 end role
 
@@ -66,12 +75,17 @@ played_by B def=
             State':=1 /\
             equal(PKa, PKaBIS') /\
             Nb':=new() /\
+            secret(Nb', nb, {B,TS}) /\ 
             PKbBIS':=PKb /\
             SND({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KBts)
 
 
-    06.  State=1 /\ RCV({Nb}_PKb) =|>
-            State':=2 
+    06.  State=1 /\ RCV({Na'.Nb.CleSession'}_PKb) =|>
+            State':=2 /\
+            request(A, B, a_b_CleSession, CleSession') /\
+            SND({Na'}_CleSession')
+
+
 
 end role
 
@@ -146,7 +160,7 @@ role environment() def=
           pka, pkb, pki: public_key,
           cleSession: symmetric_key, 
           kats, kbts : symmetric_key,
-          na, nb : protocol_id,
+          na, nb, a_b_CleSession : protocol_id,
           h : hash_func
 
 
@@ -166,7 +180,10 @@ end role
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 goal
-
+    secrecy_of na
+    secrecy_of nb
+    secrecy_of cleSession
+    authentication_on a_b_CleSession
 end goal
 
 

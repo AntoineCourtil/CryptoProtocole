@@ -3,20 +3,22 @@
 section signature:
 
 state_ts: agent * agent * agent * public_key * public_key * symmetric_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
-state_bob: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
-state_alice: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
+state_bob: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * set(agent) * nat -> fact
+state_alice: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * set(agent) * set(agent) * set(agent) * nat -> fact
 
 
 section types:
 
 h: hash_func
-na, nb: protocol_id
-start: message
-PKa, PKb, Dummy_PKbBIS, Dummy_PKaBIS, PKaBIS, PKbBIS, dummy_pk, pka, pkb, pki: public_key
-Dummy_Nb, Dummy_Na, Na, dummy_nonce, Nb, ok: text
-A, B, TS, ts, a, b, i: agent
-CleSession, dummy_sk, kats, KBts, kbts, cleSession, KAts: symmetric_key
-4, SID, Dummy_State, 3, State, 2, 1, 0, 5: nat
+nb, a_b_CleSession, na: protocol_id
+MGoal, start: message
+ASGoal, Set_54, Set_34, Set_31, Set_25, Dummy_Set_54, Dummy_Set_34, Dummy_Set_31, Dummy_Set_25: set(agent)
+kats, kbts, CleSession, KAts, KBts, cleSession, Dummy_CleSession, dummy_sk: symmetric_key
+pka, pkb, pki, PKaBIS, PKbBIS, PKa, PKb, Dummy_PKbBIS, Dummy_PKaBIS, dummy_pk: public_key
+Na, Nb, ok, Dummy_Nb, Dummy_Na, dummy_nonce: text
+set_122, set_107, set_106, set_105: set
+State, 3, 2, 5, SID, 1, 4, 0, Dummy_State, SID2, SID1: nat
+A1Goal, a, b, A, B, TS, ts, i, A2Goal: agent
 
 
 section inits:
@@ -32,54 +34,126 @@ initial_state init1 :=
  iknows(inv(pki)).
  iknows(h).
  iknows(i).
- state_alice(a,b,ts,pka,pkb,kats,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,3).
- state_bob(b,a,ts,pka,pkb,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,4).
+ state_alice(a,b,ts,pka,pkb,kats,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,set_105,set_106,set_107,3).
+ state_bob(b,a,ts,pka,pkb,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,set_122,4).
  state_ts(ts,a,b,pka,pkb,kats,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,5)
 
 
 section rules:
 
-step step_0 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na) :=
- state_alice(A,B,TS,PKa,PKb,KAts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID).
+step step_0 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID,Na) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID).
  iknows(start)
 =[exists Na]=>
- state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Nb,PKa,PKbBIS,CleSession,SID).
- iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKa))))
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Nb,PKa,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID).
+ secret(Na,na,Dummy_Set_25).
+ iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKa)))).
+ contains(A,Dummy_Set_25).
+ contains(TS,Dummy_Set_25)
 
-step step_1 (A,B,TS,PKa,PKb,KAts,Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Nb,PKbBIS) :=
- state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID).
- iknows(scrypt(KAts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
- =>
- state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
+step step_1 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,Dummy_CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID,Na,Nb,PKbBIS,CleSession) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,Dummy_CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID).
+ iknows(scrypt(KAts,pair(Dummy_Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+=[exists Na,CleSession]=>
+ state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID).
  idequal(PKb,PKbBIS).
- iknows(crypt(PKb,Nb))
+ secret(CleSession,cleSession,Dummy_Set_31).
+ witness(A,B,a_b_CleSession,CleSession).
+ secret(Na,na,Dummy_Set_34).
+ iknows(crypt(PKb,pair(Na,pair(Nb,CleSession)))).
+ contains(A,Dummy_Set_31).
+ contains(B,Dummy_Set_31).
+ contains(A,Dummy_Set_34).
+ contains(TS,Dummy_Set_34)
 
-step step_2 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKaBIS) :=
- state_bob(B,A,TS,PKa,PKb,KBts,0,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,SID).
+step step_2 (A,B,TS,PKa,PKb,KAts,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID).
+ iknows(scrypt(CleSession,Na))
+ =>
+ state_alice(A,B,TS,PKa,PKb,KAts,3,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID)
+
+step step_3 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,Dummy_Set_54,SID,Na,Nb,PKaBIS) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,0,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,Dummy_Set_54,SID).
  iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
 =[exists Nb]=>
- state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKb,CleSession,SID).
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKb,CleSession,Dummy_Set_54,SID).
  idequal(PKa,PKaBIS).
- iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKb)))))
+ secret(Nb,nb,Dummy_Set_54).
+ iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKb))))).
+ contains(B,Dummy_Set_54).
+ contains(TS,Dummy_Set_54)
 
-step step_3 (B,A,TS,PKa,PKb,KBts,Na,Nb,PKaBIS,PKbBIS,CleSession,SID) :=
- state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
- iknows(crypt(PKb,Nb))
+step step_4 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,Set_54,SID,Na,CleSession) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,Set_54,SID).
+ iknows(crypt(PKb,pair(Na,pair(Nb,CleSession))))
  =>
- state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID)
+ state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_54,SID).
+ request(A,B,a_b_CleSession,CleSession,SID).
+ iknows(scrypt(CleSession,Na))
 
-step step_4 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na,PKaBIS) :=
+step step_5 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na,PKaBIS) :=
  state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID).
  iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKaBIS))))
  =>
  state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
  iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
 
-step step_5 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKbBIS) :=
+step step_6 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKbBIS) :=
  state_ts(TS,A,B,PKa,PKb,KAts,KBts,1,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID).
  iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
  =>
  state_ts(TS,A,B,PKa,PKb,KAts,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
  iknows(scrypt(KAts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
 
+
+section properties:
+
+property secrecy_of_na (MGoal,ASGoal) :=
+ [] ((secret(MGoal,na,ASGoal) /\ iknows(MGoal))
+     => contains(i,ASGoal))
+
+property secrecy_of_nb (MGoal,ASGoal) :=
+ [] ((secret(MGoal,nb,ASGoal) /\ iknows(MGoal))
+     => contains(i,ASGoal))
+
+property secrecy_of_cleSession (MGoal,ASGoal) :=
+ [] ((secret(MGoal,cleSession,ASGoal) /\ iknows(MGoal))
+     => contains(i,ASGoal))
+
+property authentication_on_a_b_CleSession (A1Goal,A2Goal,MGoal,SID,SID1,SID2) :=
+ [] (((request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID)
+       /\ ~ equal(A2Goal,i))
+      => witness(A2Goal,A1Goal,a_b_CleSession,MGoal))
+     /\ ((request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID1)
+           /\ request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID2)
+           /\ ~ equal(A2Goal,i))
+          => equal(SID1,SID2)))
+
+
+section attack_states:
+
+attack_state secrecy_of_na (MGoal,ASGoal) :=
+ iknows(MGoal).
+ secret(MGoal,na,ASGoal) &
+ not(contains(i,ASGoal))
+
+attack_state secrecy_of_nb (MGoal,ASGoal) :=
+ iknows(MGoal).
+ secret(MGoal,nb,ASGoal) &
+ not(contains(i,ASGoal))
+
+attack_state secrecy_of_cleSession (MGoal,ASGoal) :=
+ iknows(MGoal).
+ secret(MGoal,cleSession,ASGoal) &
+ not(contains(i,ASGoal))
+
+attack_state authentication_on_a_b_CleSession (A1Goal,A2Goal,MGoal,SID) :=
+ request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID) &
+ not(witness(A2Goal,A1Goal,a_b_CleSession,MGoal)) &
+ not(equal(A2Goal,i))
+attack_state replay_protection_on_a_b_CleSession (A2Goal,A1Goal,MGoal,SID1,SID2) :=
+ request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID1).
+ request(A1Goal,A2Goal,a_b_CleSession,MGoal,SID2) &
+ not(equal(SID1,SID2)) &
+ not(equal(A2Goal,i))
 
