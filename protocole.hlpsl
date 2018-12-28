@@ -1,0 +1,179 @@
+%% PROTOCOL: Accès WIFI
+%%
+%%
+%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition du rôle Client
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+role alice (A, B, TS: agent,             
+            PKa, PKb: public_key,
+            KAts: symmetric_key,    
+            SND, RCV: channel(dy)) 
+played_by A def=
+
+  local State: nat, 
+        Na, Nb: text,
+        PKaBIS, PKbBIS: public_key,
+        CleSession : symmetric_key
+
+  const ok: text
+
+  init State:=0
+
+  transition  
+   
+    01.  State=0 /\ RCV(start) =|>
+            State':=1 /\
+            Na':=new() /\
+            PKaBIS' := PKa /\
+            SND({Na'.{PKaBIS'}_inv(PKa)}_KAts)
+   
+    
+    05.  State=1 /\ RCV({Na.Nb'.{PKbBIS'}_inv(PKb)}_KAts) =|> 
+            State':=2 /\
+            equal(PKb, PKbBIS') /\
+            SND({Nb'}_PKb)
+
+end role
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition du rôle Borne, initiant le protocole
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+role bob (A, B, TS: agent,             
+            PKa, PKb: public_key,
+            KBts: symmetric_key,    
+            SND, RCV: channel(dy)) 
+played_by B def=
+
+  local State: nat, 
+        Na, Nb: text,
+        PKaBIS, PKbBIS: public_key,
+        CleSession: symmetric_key
+
+  init State:=0
+
+  transition  
+   
+    03.  State=0 /\ RCV({Na'.{PKaBIS'}_inv(PKa)}_KBts) =|> 
+            State':=1 /\
+            equal(PKa, PKaBIS') /\
+            Nb':=new() /\
+            PKbBIS':=PKb /\
+            SND({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KBts)
+
+
+    06.  State=1 /\ RCV({Nb}_PKb) =|>
+            State':=2 
+
+end role
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition du rôle Serveur
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+role ts (A, B, TS: agent,             
+            PKa, PKb: public_key,
+            KAts, KBts: symmetric_key,
+            SND, RCV: channel(dy))  
+played_by TS def=
+
+  local State: nat, 
+        Na, Nb: text,
+        PKaBIS, PKbBIS: public_key,
+        CleSession: symmetric_key
+
+  const ok: text
+
+  init State:=0
+
+  transition  
+   
+    02.  State=0 /\ RCV({Na'.{PKaBIS'}_inv(PKa)}_KAts) =|>
+            SND({Na'.{PKaBIS'}_inv(PKa)}_KBts)
+
+    04.  State=1 /\ RCV({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KBts) =|>
+            State':=2 /\
+            SND({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KAts)
+
+
+end role
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition du rôle Session
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+role session(A, B, TS: agent, PKa, PKb: public_key, KAts, KBts: symmetric_key) def=
+
+  local SA, RA, SB, RB, SS, RS: channel(dy)
+ 
+  composition 
+
+        alice(A,B,TS,PKa,PKb,KAts,SA,RA) /\ 
+        bob(A,B,TS,PKa,PKb,KBts,SB,RB) /\
+        ts(A,B,TS,PKa,PKb,KAts,KBts,SS,RS)
+end role
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition du Scenario
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+role environment() def=
+
+
+    const a, b, ts: agent,
+          pka, pkb, pki: public_key,
+          cleSession: symmetric_key, 
+          kats, kbts : symmetric_key,
+          na, nb : protocol_id,
+          h : hash_func
+
+
+    intruder_knowledge = {a, b, ts, pka, pkb, pki, inv(pki), h}
+
+
+    composition
+
+        session(a,b,ts,pka,pkb,kats,kbts)
+
+end role
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% définition des Propriétés à vérifier
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+goal
+
+end goal
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% lancement du rôle principal
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+environment()

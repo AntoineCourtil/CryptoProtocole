@@ -1,0 +1,85 @@
+%% IF specification of protocole.hlpsl
+
+section signature:
+
+state_ts: agent * agent * agent * public_key * public_key * symmetric_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
+state_bob: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
+state_alice: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
+
+
+section types:
+
+h: hash_func
+na, nb: protocol_id
+start: message
+PKa, PKb, Dummy_PKbBIS, Dummy_PKaBIS, PKaBIS, PKbBIS, dummy_pk, pka, pkb, pki: public_key
+Dummy_Nb, Dummy_Na, Na, dummy_nonce, Nb, ok: text
+A, B, TS, ts, a, b, i: agent
+CleSession, dummy_sk, kats, KBts, kbts, cleSession, KAts: symmetric_key
+4, SID, Dummy_State, 3, State, 2, 1, 0, 5: nat
+
+
+section inits:
+
+initial_state init1 := 
+ iknows(start).
+ iknows(a).
+ iknows(b).
+ iknows(ts).
+ iknows(pka).
+ iknows(pkb).
+ iknows(pki).
+ iknows(inv(pki)).
+ iknows(h).
+ iknows(i).
+ state_alice(a,b,ts,pka,pkb,kats,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,3).
+ state_bob(b,a,ts,pka,pkb,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,4).
+ state_ts(ts,a,b,pka,pkb,kats,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,5)
+
+
+section rules:
+
+step step_0 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID).
+ iknows(start)
+=[exists Na]=>
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Nb,PKa,PKbBIS,CleSession,SID).
+ iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKa))))
+
+step step_1 (A,B,TS,PKa,PKb,KAts,Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Nb,PKbBIS) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID).
+ iknows(scrypt(KAts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+ =>
+ state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
+ idequal(PKb,PKbBIS).
+ iknows(crypt(PKb,Nb))
+
+step step_2 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKaBIS) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,0,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,SID).
+ iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
+=[exists Nb]=>
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKb,CleSession,SID).
+ idequal(PKa,PKaBIS).
+ iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKb)))))
+
+step step_3 (B,A,TS,PKa,PKb,KBts,Na,Nb,PKaBIS,PKbBIS,CleSession,SID) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
+ iknows(crypt(PKb,Nb))
+ =>
+ state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID)
+
+step step_4 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na,PKaBIS) :=
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID).
+ iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKaBIS))))
+ =>
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
+ iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
+
+step step_5 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKbBIS) :=
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,1,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID).
+ iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+ =>
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
+ iknows(scrypt(KAts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+
+
