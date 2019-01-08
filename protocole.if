@@ -2,9 +2,9 @@
 
 section signature:
 
-state_ts: agent * agent * agent * public_key * public_key * symmetric_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * nat -> fact
-state_bob: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * set(agent) * nat -> fact
-state_alice: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * set(agent) * set(agent) * set(agent) * nat -> fact
+state_ts: agent * agent * agent * public_key * public_key * symmetric_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * set(agent) * nat -> fact
+state_bob: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * symmetric_key * set(agent) * nat -> fact
+state_alice: agent * agent * agent * public_key * public_key * symmetric_key * nat * text * text * public_key * public_key * symmetric_key * symmetric_key * set(agent) * nat -> fact
 
 
 section types:
@@ -12,13 +12,13 @@ section types:
 h: hash_func
 nb, a_b_CleSession, na: protocol_id
 MGoal, start: message
-ASGoal, Set_54, Set_34, Set_31, Set_25, Dummy_Set_54, Dummy_Set_34, Dummy_Set_31, Dummy_Set_25: set(agent)
-kats, kbts, CleSession, KAts, KBts, cleSession, Dummy_CleSession, dummy_sk: symmetric_key
-pka, pkb, pki, PKaBIS, PKbBIS, PKa, PKb, Dummy_PKbBIS, Dummy_PKaBIS, dummy_pk: public_key
+ASGoal, Set_74, Set_52, Set_26, Dummy_Set_74, Dummy_Set_52, Dummy_Set_26: set(agent)
+kats, kbts, cleSession, CleSession, KAts, KBts, Dummy_CleSession, dummy_sk: symmetric_key
+pka, pkb, pki, PKaBIS, PKbBIS, PKa, PKb, dummy_pk: public_key
 Na, Nb, ok, Dummy_Nb, Dummy_Na, dummy_nonce: text
-set_122, set_107, set_106, set_105: set
-State, 3, 2, 5, SID, 1, 4, 0, Dummy_State, SID2, SID1: nat
-A1Goal, a, b, A, B, TS, ts, i, A2Goal: agent
+set_121, set_117, set_106: set
+State, 3, 2, 1, 5, 0, SID, 4, Dummy_State, SID2, SID1: nat
+a, b, A, B, TS, ts, i, A2Goal, A1Goal: agent
 
 
 section inits:
@@ -34,76 +34,79 @@ initial_state init1 :=
  iknows(inv(pki)).
  iknows(h).
  iknows(i).
- state_alice(a,b,ts,pka,pkb,kats,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,set_105,set_106,set_107,3).
- state_bob(b,a,ts,pka,pkb,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,set_122,4).
- state_ts(ts,a,b,pka,pkb,kats,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,5)
+ state_alice(a,b,ts,pka,pkb,kats,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,dummy_sk,set_106,3).
+ state_bob(b,a,ts,pka,pkb,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,dummy_sk,set_117,4).
+ state_ts(ts,a,b,pka,pkb,kats,kbts,0,dummy_nonce,dummy_nonce,dummy_pk,dummy_pk,dummy_sk,set_121,5)
 
 
 section rules:
 
-step step_0 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID,Na) :=
- state_alice(A,B,TS,PKa,PKb,KAts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID).
+step step_0 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Dummy_Set_26,SID,Na) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,0,Dummy_Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Dummy_Set_26,SID).
  iknows(start)
 =[exists Na]=>
- state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Nb,PKa,PKbBIS,CleSession,Dummy_Set_25,Set_31,Set_34,SID).
- secret(Na,na,Dummy_Set_25).
- iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKa)))).
- contains(A,Dummy_Set_25).
- contains(TS,Dummy_Set_25)
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Dummy_Set_26,SID).
+ secret(Na,na,Dummy_Set_26).
+ iknows(pair(A,scrypt(KAts,pair(B,Na)))).
+ contains(A,Dummy_Set_26).
+ contains(B,Dummy_Set_26)
 
-step step_1 (A,B,TS,PKa,PKb,KAts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,Dummy_CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID,Na,Nb,PKbBIS,CleSession) :=
- state_alice(A,B,TS,PKa,PKb,KAts,1,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,Dummy_CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID).
- iknows(scrypt(KAts,pair(Dummy_Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
-=[exists Na,CleSession]=>
- state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Dummy_Set_31,Dummy_Set_34,SID).
- idequal(PKb,PKbBIS).
- secret(CleSession,cleSession,Dummy_Set_31).
- witness(A,B,a_b_CleSession,CleSession).
- secret(Na,na,Dummy_Set_34).
- iknows(crypt(PKb,pair(Na,pair(Nb,CleSession)))).
- contains(A,Dummy_Set_31).
- contains(B,Dummy_Set_31).
- contains(A,Dummy_Set_34).
- contains(TS,Dummy_Set_34)
-
-step step_2 (A,B,TS,PKa,PKb,KAts,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID) :=
- state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID).
- iknows(scrypt(CleSession,Na))
+step step_1 (A,B,TS,PKa,PKb,KAts,Na,Dummy_Nb,PKaBIS,PKbBIS,Dummy_CleSession,KBts,Set_26,SID,Nb,CleSession) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,1,Na,Dummy_Nb,PKaBIS,PKbBIS,Dummy_CleSession,KBts,Set_26,SID).
+ iknows(scrypt(KAts,pair(CleSession,scrypt(KBts,Nb))))
  =>
- state_alice(A,B,TS,PKa,PKb,KAts,3,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_25,Set_31,Set_34,SID)
-
-step step_3 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,Dummy_Set_54,SID,Na,Nb,PKaBIS) :=
- state_bob(B,A,TS,PKa,PKb,KBts,0,Dummy_Na,Dummy_Nb,Dummy_PKaBIS,Dummy_PKbBIS,CleSession,Dummy_Set_54,SID).
- iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
-=[exists Nb]=>
- state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKb,CleSession,Dummy_Set_54,SID).
- idequal(PKa,PKaBIS).
- secret(Nb,nb,Dummy_Set_54).
- iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKb))))).
- contains(B,Dummy_Set_54).
- contains(TS,Dummy_Set_54)
-
-step step_4 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,Set_54,SID,Na,CleSession) :=
- state_bob(B,A,TS,PKa,PKb,KBts,1,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,Set_54,SID).
- iknows(crypt(PKb,pair(Na,pair(Nb,CleSession))))
- =>
- state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_54,SID).
+ state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Set_26,SID).
  request(A,B,a_b_CleSession,CleSession,SID).
- iknows(scrypt(CleSession,Na))
+ iknows(scrypt(CleSession,scrypt(KBts,Nb)))
 
-step step_5 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID,Na,PKaBIS) :=
- state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Dummy_Na,Nb,Dummy_PKaBIS,PKbBIS,CleSession,SID).
- iknows(scrypt(KAts,pair(Na,crypt(inv(PKa),PKaBIS))))
+step step_2 (A,B,TS,PKa,PKb,KAts,Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Set_26,SID) :=
+ state_alice(A,B,TS,PKa,PKb,KAts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Set_26,SID).
+ iknows(scrypt(CleSession,scrypt(KAts,Na)))
  =>
- state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
- iknows(scrypt(KBts,pair(Na,crypt(inv(PKa),PKaBIS))))
+ state_alice(A,B,TS,PKa,PKb,KAts,3,Na,Nb,PKaBIS,PKbBIS,CleSession,KBts,Set_26,SID)
 
-step step_6 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID,Na,Nb,PKbBIS) :=
- state_ts(TS,A,B,PKa,PKb,KAts,KBts,1,Dummy_Na,Dummy_Nb,PKaBIS,Dummy_PKbBIS,CleSession,SID).
- iknows(scrypt(KBts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+step step_3 (B,A,TS,PKa,PKb,KBts,Na,Dummy_Nb,PKaBIS,PKbBIS,CleSession,KAts,Dummy_Set_52,SID,Nb) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,0,Na,Dummy_Nb,PKaBIS,PKbBIS,CleSession,KAts,Dummy_Set_52,SID).
+ iknows(scrypt(KBts,A))
+=[exists Nb]=>
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Na,Nb,PKaBIS,PKbBIS,CleSession,KAts,Dummy_Set_52,SID).
+ secret(Nb,nb,Dummy_Set_52).
+ iknows(scrypt(KBts,Nb)).
+ contains(A,Dummy_Set_52).
+ contains(B,Dummy_Set_52)
+
+step step_4 (B,A,TS,PKa,PKb,KBts,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,KAts,Set_52,SID,Na,CleSession) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,1,Dummy_Na,Nb,PKaBIS,PKbBIS,Dummy_CleSession,KAts,Set_52,SID).
+ iknows(scrypt(KBts,pair(CleSession,scrypt(KAts,Na))))
  =>
- state_ts(TS,A,B,PKa,PKb,KAts,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,SID).
- iknows(scrypt(KAts,pair(Na,pair(Nb,crypt(inv(PKb),PKbBIS)))))
+ state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,KAts,Set_52,SID).
+ request(A,B,a_b_CleSession,CleSession,SID)
+
+step step_5 (B,A,TS,PKa,PKb,KBts,Na,Nb,PKaBIS,PKbBIS,CleSession,KAts,Set_52,SID) :=
+ state_bob(B,A,TS,PKa,PKb,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,KAts,Set_52,SID).
+ iknows(scrypt(CleSession,scrypt(KBts,Nb)))
+ =>
+ state_bob(B,A,TS,PKa,PKb,KBts,3,Na,Nb,PKaBIS,PKbBIS,CleSession,KAts,Set_52,SID).
+ iknows(scrypt(CleSession,scrypt(KAts,Na)))
+
+step step_6 (TS,A,B,PKa,PKb,KAts,KBts,Dummy_Na,Nb,PKaBIS,PKbBIS,CleSession,Set_74,SID,Na) :=
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,0,Dummy_Na,Nb,PKaBIS,PKbBIS,CleSession,Set_74,SID).
+ iknows(pair(A,scrypt(KAts,pair(B,Na))))
+ =>
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,1,Na,Nb,PKaBIS,PKbBIS,CleSession,Set_74,SID).
+ iknows(scrypt(KBts,A))
+
+step step_7 (TS,A,B,PKa,PKb,KAts,KBts,Na,Dummy_Nb,PKaBIS,PKbBIS,Dummy_CleSession,Dummy_Set_74,SID,Nb,CleSession) :=
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,1,Na,Dummy_Nb,PKaBIS,PKbBIS,Dummy_CleSession,Dummy_Set_74,SID).
+ iknows(scrypt(KBts,Nb))
+=[exists CleSession]=>
+ state_ts(TS,A,B,PKa,PKb,KAts,KBts,2,Na,Nb,PKaBIS,PKbBIS,CleSession,Dummy_Set_74,SID).
+ secret(CleSession,cleSession,Dummy_Set_74).
+ witness(A,B,a_b_CleSession,CleSession).
+ iknows(scrypt(KAts,pair(CleSession,scrypt(KBts,Nb)))).
+ iknows(scrypt(KBts,pair(CleSession,scrypt(KAts,Na)))).
+ contains(A,Dummy_Set_74).
+ contains(B,Dummy_Set_74)
 
 
 section properties:
