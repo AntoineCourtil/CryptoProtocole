@@ -9,7 +9,6 @@ SUMMARY
 DETAILS
   BOUNDED NUMBER OF SESSIONS
   TYPED MODEL
-  BOUNDED SPEC. READING DEPTH
 
 PROTOCOL
   protocole.if
@@ -21,8 +20,9 @@ BACKEND
   CL-AtSe
 
 STATISTICS
-  Analysed   : 6 states
-  Reachable  : 4 states
+  Analysed   : 3 states
+  Reachable  : 3 states
   Translation: 0.01 seconds 
   Computation: 0.00 seconds 
+
 ```

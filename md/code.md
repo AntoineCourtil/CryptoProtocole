@@ -19,7 +19,7 @@ played_by A def=
   local State: nat, 
         Na, Nb: text,
         PKaBIS, PKbBIS: public_key,
-        CleSession : symmetric_key
+        CleSession, KBts : symmetric_key
 
   const ok: text
 
@@ -30,23 +30,19 @@ played_by A def=
     01.  State=0 /\ RCV(start) =|>
             State':=1 /\
             Na':=new() /\
-            secret(Na', na, {A,TS}) /\ 
-            PKaBIS' := PKa /\
-            SND({Na'.{PKaBIS'}_inv(PKa)}_KAts)
-   
-    
-    05.  State=1 /\ RCV({Na.Nb'.{PKbBIS'}_inv(PKb)}_KAts) =|> 
-            State':=2 /\
-            equal(PKb, PKbBIS') /\
-            CleSession':=new() /\
-            secret(CleSession', cleSession, {A,B}) /\ 
-            witness(A, B, a_b_CleSession, CleSession') /\
-            Na':=new() /\
-            secret(Na', na, {A,TS}) /\ 
-            SND({Na'.Nb'.CleSession'}_PKb)
+            secret(Na', na, {A,B}) /\ 
+            SND(A.{B.Na'}_KAts)
 
-    07.  State=2 /\ RCV({Na}_CleSession) =|>
+
+    06. State=1 /\ RCV({CleSession'.{Nb'}_KBts}_KAts) =|>
+            State':=2 /\
+            request(A, B, a_b_CleSession, CleSession') /\
+            SND({{Nb'}_KBts}_CleSession')
+
+    08. State=2 /\ RCV({{Na}_KAts}_CleSession) =|>
             State':=3
+
+
 
 end role
 
@@ -66,25 +62,25 @@ played_by B def=
   local State: nat, 
         Na, Nb: text,
         PKaBIS, PKbBIS: public_key,
-        CleSession: symmetric_key
+        CleSession, KAts: symmetric_key
 
   init State:=0
 
   transition  
    
-    03.  State=0 /\ RCV({Na'.{PKaBIS'}_inv(PKa)}_KBts) =|> 
+    03. State=0 /\ RCV({A}_KBts) =|> 
             State':=1 /\
-            equal(PKa, PKaBIS') /\
             Nb':=new() /\
-            secret(Nb', nb, {B,TS}) /\ 
-            PKbBIS':=PKb /\
-            SND({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KBts)
+            secret(Nb', nb, {A,B}) /\ 
+            SND({Nb'}_KBts)
 
-
-    06.  State=1 /\ RCV({Na'.Nb.CleSession'}_PKb) =|>
+    05. State=1 /\ RCV({CleSession'.{Na'}_KAts}_KBts) =|>
             State':=2 /\
-            request(A, B, a_b_CleSession, CleSession') /\
-            SND({Na'}_CleSession')
+            request(A, B, a_b_CleSession, CleSession')
+
+    07. State=2 /\ RCV({{Nb}_KBts}_CleSession) =|>
+            State':=3 /\
+            SND({{Na}_KAts}_CleSession)
 
 
 
@@ -117,12 +113,17 @@ played_by TS def=
 
   transition  
    
-    02.  State=0 /\ RCV({Na'.{PKaBIS'}_inv(PKa)}_KAts) =|>
-            SND({Na'.{PKaBIS'}_inv(PKa)}_KBts)
+    02. State=0 /\ RCV(A.{B.Na'}_KAts) =|>
+            State':=1 /\
+            SND({A}_KBts)
 
-    04.  State=1 /\ RCV({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KBts) =|>
+    04. State=1 /\ RCV({Nb'}_KBts) =|> 
             State':=2 /\
-            SND({Na'.Nb'.{PKbBIS'}_inv(PKb)}_KAts)
+            CleSession':=new() /\
+            secret(CleSession', cleSession, {A,B}) /\ 
+            witness(A, B, a_b_CleSession, CleSession') /\
+            SND({CleSession'.{Nb'}_KBts}_KAts) /\
+            SND({CleSession'.{Na}_KAts}_KBts)
 
 
 end role
